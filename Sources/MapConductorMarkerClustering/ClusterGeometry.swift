@@ -213,26 +213,32 @@ struct ClusterGeometry {
     }
 
     /// 靴ひも公式による多角形重心。面積が潰れている場合は頂点平均へ落とす。
+    /// 外積は最初の頂点からの相対座標で取る。絶対座標のままだと値が大きすぎて、
+    /// 数 m 間隔のマーカーでは桁落ちで重心が数十 km ずれる。
     func polygonCentroidProjected(_ hull: [HullPoint]) -> HullPoint? {
         guard hull.count >= 3 else { return nil }
+        let ox = hull[0].x
+        let oy = hull[0].y
         var twiceArea = 0.0
         var cx = 0.0
         var cy = 0.0
         for i in hull.indices {
             let a = hull[i]
             let b = hull[(i + 1) % hull.count]
-            let cross = a.x * b.y - b.x * a.y
+            let ax = a.x - ox
+            let ay = a.y - oy
+            let bx = b.x - ox
+            let by = b.y - oy
+            let cross = ax * by - bx * ay
             twiceArea += cross
-            cx += (a.x + b.x) * cross
-            cy += (a.y + b.y) * cross
+            cx += (ax + bx) * cross
+            cy += (ay + by) * cross
         }
         if abs(twiceArea) < 1e-6 {
             let ax = hull.reduce(0.0) { $0 + $1.x } / Double(hull.count)
             let ay = hull.reduce(0.0) { $0 + $1.y } / Double(hull.count)
             return HullPoint(x: ax, y: ay)
         }
-        cx /= 3.0 * twiceArea
-        cy /= 3.0 * twiceArea
-        return HullPoint(x: cx, y: cy)
+        return HullPoint(x: ox + cx / (3.0 * twiceArea), y: oy + cy / (3.0 * twiceArea))
     }
 }
