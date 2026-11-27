@@ -44,7 +44,7 @@ extension MarkerClusterStrategy {
 
             for (index, move) in activeMoves.enumerated() {
                 let position = geometry.interpolatePosition(start: move.start, end: move.end, t: t)
-                let nextState = move.baseState.copy(position: position)
+                let nextState = move.baseState.copy(id: move.baseState.id, position: position)
                 let prevEntity = move.entity
                 let nextEntity = MarkerEntity(
                     marker: prevEntity.marker,
@@ -118,7 +118,7 @@ extension MarkerClusterStrategy {
         let animatedStartEntities: [MarkerEntity<ActualMarker>]
         if !animatedAddEntries.isEmpty {
             let animatedStartStates = animatedAddEntries.map { entry in
-                entry.state.copy(position: entry.start)
+                entry.state.copy(id: entry.state.id, position: entry.start)
             }
             animatedStartEntities = await addStatesToRenderer(states: animatedStartStates, renderer: renderer)
             await renderer.onPostProcess()
